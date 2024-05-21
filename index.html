@@ -21,6 +21,12 @@
             integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
             crossorigin="anonymous"
         />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+            rel="stylesheet"
+        />
         <link
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
             rel="stylesheet"
@@ -41,7 +47,7 @@
                 <div class="col">
                     <button
                         type="button"
-                        id="bike"
+                        id="cycling"
                         onclick="chooseModus(this)"
                         class="round-btn text-center"
                         data-bs-toggle="button"
@@ -52,7 +58,7 @@
                 <div class="col">
                     <button
                         type="button"
-                        id="car"
+                        id="driving"
                         onclick="chooseModus(this)"
                         class="round-btn text-center"
                         data-bs-toggle="button"
@@ -64,15 +70,36 @@
         </div>
         <!-- Chart Container -->
         <div class="chart-wrapper">
-            <div class="chart-container bike">
+            <!-- Cycling Graph -->
+            <div class="chart-container">
                 <span class="bar-container">
-                    <span id="carbon" class="bar"></span>
+                    <span id="carbon-cycling" class="bar"></span>
                 </span>
-                <span id="cost" class="bar-container">
-                    <span class="bar"></span>
+                <span class="bar-container">
+                    <span id="cost-cycling" class="bar"></span>
                 </span>
             </div>
-            <div class="chart-container car">Test</div>
+            <!-- Driving Graph -->
+            <div class="chart-container">
+                <span class="bar-container">
+                    <span id="carbon-driving" class="bar"></span>
+                </span>
+                <span class="bar-container">
+                    <span id="cost-driving" class="bar"></span>
+                </span>
+            </div>
+        </div>
+        <!-- Slider -->
+        <div class="slidecontainer">
+            <input
+                type="range"
+                min="0"
+                max="500"
+                value="0"
+                class="slider"
+                id="slider"
+                onchange="updateSlider(this.value)"
+            />
         </div>
 
         <script

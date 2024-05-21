@@ -6,8 +6,11 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: "Roboto Mono", monospace;
-    font-size: 14px;
+    /* font-family: "Roboto Mono", monospace;
+    font-size: 14px; */
+    font-family: "Press Start 2P", system-ui;
+    font-weight: 400;
+    font-style: normal;
     background-color: var(--main-bg-color);
 }
 
@@ -21,19 +24,19 @@ body {
 #info {
     display: table;
     position: absolute;
-    margin: 0px auto;
+    margin: auto;
     word-wrap: anywhere;
     white-space: pre-wrap;
     padding: 10px;
     border: none;
     border-radius: 3px;
     font-size: 30px;
-    text-align: left;
+    text-align: center;
     color: var(--main-color);
-    background: var(--main-bg-color);
+    /* background: var(--main-bg-color); */
     top: 0;
-    font-weight: bold;
-    font-style: italic;
+    /* font-weight: bold; */
+    /* font-style: italic; */
     padding: 0px;
 }
 
@@ -105,6 +108,17 @@ body {
 
 .bar {
     position: absolute;
-    height: 10%;
+    height: 0.2%;
     background-color: var(--main-color);
+}
+
+.slidecontainer {
+    position: absolute;
+    padding: 20px;
+    width: 100%;
+}
+
+#slider {
+    top: 0;
+    float: right;
 }

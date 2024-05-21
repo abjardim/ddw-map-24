@@ -2,73 +2,113 @@
 mapboxgl.accessToken =
     "pk.eyJ1IjoiYWJqYXJkaW0iLCJhIjoiY2tmZmpyM3d3MGZkdzJ1cXZ3a3kza3BybiJ9.2CgI2GbcJysBRHmh7WwdVA";
 
-const center = [8.879, 51.936];
+const end = [8.872643564339544, 51.94003709534788]; // The DDW Location
 
 let markerFixed = true;
+
+// Define the radius in kilometers
+var radiusInKm = 10;
+
+// Calculate the bounding box using Turf.js
+var centerPoint = turf.point(end);
+var buffered = turf.buffer(centerPoint, radiusInKm, { units: "kilometers" });
+var bbox = turf.bbox(buffered);
+
+// Convert the bounding box to a format Mapbox GL JS understands
+var bounds = [
+    [bbox[0], bbox[1]], // [minLng, minLat]
+    [bbox[2], bbox[3]], // [maxLng, maxLat]
+];
 
 const map = new mapboxgl.Map({
     container: "map",
     style: "mapbox://styles/mapbox/dark-v9",
-    center: center,
+    center: end,
     zoom: 15.53,
 });
 
-map.on("style.load", () => {
-    // Insert the layer beneath any symbol layer.
-    const layers = map.getStyle().layers;
-    const labelLayerId = layers.find(
-        (layer) => layer.type === "symbol" && layer.layout["text-field"]
-    ).id;
-
-    // The 'building' layer in the Mapbox Streets
-    // vector tileset contains building height data
-    // from OpenStreetMap.
-    // map.addLayer(
-    //     {
-    //         id: "add-3d-buildings",
-    //         source: "composite",
-    //         "source-layer": "building",
-    //         filter: ["==", "extrude", "true"],
-    //         type: "fill-extrusion",
-    //         minzoom: 15,
-    //         paint: {
-    //             "fill-extrusion-color": "#aaa",
-
-    //             // Use an 'interpolate' expression to
-    //             // add a smooth transition effect to
-    //             // the buildings as the user zooms in.
-    //             "fill-extrusion-height": [
-    //                 "interpolate",
-    //                 ["linear"],
-    //                 ["zoom"],
-    //                 15,
-    //                 0,
-    //                 15.05,
-    //                 ["get", "height"],
-    //             ],
-    //             "fill-extrusion-base": [
-    //                 "interpolate",
-    //                 ["linear"],
-    //                 ["zoom"],
-    //                 15,
-    //                 0,
-    //                 15.05,
-    //                 ["get", "min_height"],
-    //             ],
-    //             "fill-extrusion-opacity": 0.6,
-    //         },
-    //     },
-    //     labelLayerId
-    // );
+// Set the max bounds on the map
+map.on("load", function () {
+    map.setMaxBounds(bounds);
 });
 
 let start;
-let chosenModus;
-let carData;
-let carRoute;
-let bikeData;
-let bikeRoute;
-const end = [8.87912, 51.93507]; // The DDW Location
+
+let animationRange = [500, 1000];
+
+let points = {
+    driving: {
+        type: "FeatureCollection",
+        features: [
+            {
+                type: "Feature",
+                properties: {},
+                geometry: {
+                    type: "Point",
+                    coordinates: end,
+                },
+            },
+        ],
+    },
+    cycling: {
+        type: "FeatureCollection",
+        features: [
+            {
+                type: "Feature",
+                properties: {},
+                geometry: {
+                    type: "Point",
+                    coordinates: end,
+                },
+            },
+        ],
+    },
+};
+
+let icons = {
+    driving: "car-15",
+    cycling: "bicycle-15",
+};
+
+let counters = {
+    driving: 0,
+    cycling: 0,
+};
+
+let steps = {
+    driving: 700,
+    cycling: 500,
+};
+
+let routing = {
+    driving: null,
+    cycling: null,
+};
+
+let animatedRoutes = {
+    driving: [],
+    cycling: [],
+};
+
+let data = {
+    driving: null,
+    cycling: null,
+};
+
+let offsets = {
+    driving: 3,
+    cycling: -3,
+};
+
+let colors = {
+    driving: "#FF6D00",
+    cycling: "#071689",
+};
+
+let barCounter = {
+    driving: 0.0,
+    cycling: 0.0,
+};
 
 async function requestRoute(modus, start, end) {
     const query = await fetch(
@@ -76,34 +116,37 @@ async function requestRoute(modus, start, end) {
         { method: "GET" }
     );
     const json = await query.json();
-    data = json.routes[0];
-    route = data.geometry.coordinates;
-    return data;
+    const jsonData = json.routes[0];
+    return jsonData;
 }
 
 // Function to make the route request
-async function getRoutes(start, end) {
-    bikeData = await requestRoute("cycling", start, end);
-    bikeRoute = bikeData.geometry.coordinates;
-    carData = await requestRoute("driving", start, end);
-    carRoute = carData.geometry.coordinates;
+async function getRoute(start, end, id) {
+    let jsonData = await requestRoute(id, start, end);
+    data[id] = jsonData;
+    routing[id] = data[id].geometry.coordinates;
 
-    // Add end point to the map
-    let marker = new mapboxgl.Marker({ color: colorBlue })
-        .setLngLat(end)
-        .addTo(map);
-
-    // Uncomment to show route on the map
-    drawRoute(bikeRoute, 3, colorOrange, "cycling");
-    // drawRoute(carRoute, -3, colorBlue, "driving");
-    // animateRoute(route);
+    // drawRoute(id);
 }
 
-const colorOrange = "#FF6D00";
-const colorBlue = "#071689";
+function calculateSteps(id) {
+    let otherId = id === "driving" ? "cycling" : "driving";
+    if (data[id].duration > data[otherId].duration) {
+        return;
+    } else {
+        steps[id] = animationRange[0];
+        let difference = Math.floor(data[otherId].duration - data[id].duration);
+        let stepsOtherId = steps[id] + difference;
+        steps[otherId] =
+            stepsOtherId > animationRange[1] ? animationRange[1] : stepsOtherId;
+    }
+}
 
 // Function to show requested route on the map
-function drawRoute(route, offset, color, id) {
+function drawRoute(id) {
+    const route = routing[id];
+    points[id].features[0].geometry.coordinates = route[0];
+    const routeId = id + "Route";
     const geojson = {
         type: "Feature",
         properties: {},
@@ -113,13 +156,13 @@ function drawRoute(route, offset, color, id) {
         },
     };
     // If the route already exists on the map, we'll reset it using setData
-    if (map.getSource(id)) {
-        map.getSource(id).setData(geojson);
+    if (map.getSource(routeId)) {
+        map.getSource(routeId).setData(geojson);
     }
-    // Otherwise, we'll make a new request
+    // Otherwise, we'll add it
     else {
         map.addLayer({
-            id: id,
+            id: routeId,
             type: "line",
             source: {
                 type: "geojson",
@@ -130,129 +173,119 @@ function drawRoute(route, offset, color, id) {
                 "line-cap": "round",
             },
             paint: {
-                "line-color": "#3887be",
+                "line-color": colors[id],
                 "line-width": 5,
                 "line-opacity": 0.75,
-                "line-offset": offset,
-                "line-color": color,
+                "line-offset": offsets[id],
             },
         });
     }
+
+    // Clear the existing animated route for this mode
+    animatedRoutes[id] = [];
 
     // Calculate the distance in kilometers between route start/end point.
-    var line = { geometry: bikeData.geometry, type: "Feature" };
-    var lineDistance = turf.lineDistance(line, "kilometers");
+    let line = { geometry: data[id].geometry, type: "Feature" };
+    let lineDistance = turf.lineDistance(line, "kilometers");
 
-    // Draw an arc between the `origin` & `destination` of the two points
-    for (var i = 0; i < lineDistance; i += lineDistance / steps) {
-        var segment = turf.along(bikeData.geometry, i, "kilometers");
-        animatedRoute.push(segment.geometry.coordinates);
+    // Draw a path between the `origin` & `destination` of the two points
+    for (let i = 0; i < lineDistance; i += lineDistance / steps[id]) {
+        let segment = turf.along(data[id].geometry, i, "kilometers");
+        animatedRoutes[id].push(segment.geometry.coordinates);
     }
 
-    animate();
-}
-
-// Used to increment the value of the point measurement against the route.
-let steps = 500;
-let counter = 0;
-let point;
-let animatedRoute = [];
-
-function animate() {
-    // Update point geometry to a new position based on counter denoting
-    // the index to access the arc.
-    point.features[0].geometry.coordinates = animatedRoute[counter];
-
-    // Update the source with this new data.
-    map.getSource("point").setData(point);
-
-    // Request the next frame of animation so long the end has not been reached.
-    if (counter < steps) {
-        requestAnimationFrame(animate);
+    // Remove and add icon again so it is on top of route
+    // stupid solution, try to find another later
+    if (map.getSource(id)) {
+        map.removeLayer(id);
+        map.removeSource(id);
     }
 
-    counter = counter + 1;
-}
+    map.addSource(id, {
+        type: "geojson",
+        data: points[id],
+    });
+    map.addLayer({
+        id: id,
+        source: id,
+        type: "symbol",
+        layout: {
+            "icon-image": icons[id],
+            "icon-rotate": ["get", "bearing"],
+            "icon-rotation-alignment": "map",
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true,
+            "icon-size": 3,
+        },
+    });
 
-function animateRoute(route) {
-    // this is the path the camera will look at
-    const targetRoute = route;
-    // this is the path the camera will move along
-    const cameraRoute = route;
-    const animationDuration = 20000;
-    const cameraAltitude = 50;
-    // get the overall distance of each route so we can interpolate along them
-    const routeDistance = turf.lineDistance(turf.lineString(targetRoute));
-    const cameraRouteDistance = turf.lineDistance(turf.lineString(cameraRoute));
+    if (map.getSource("drivingRoute") && map.getSource("cyclingRoute")) {
+        // Geographic coordinates of the LineString
+        const coordinates = routing["driving"].concat(routing["cycling"]);
 
-    let start;
-
-    function frame(time) {
-        if (!start) start = time;
-        // phase determines how far through the animation we are
-        const phase = (time - start) / animationDuration;
-
-        // phase is normalized between 0 and 1
-        // when the animation is finished, reset start to loop the animation
-        // if (phase > 1) {
-        //     // wait 1.5 seconds before looping
-        //     setTimeout(() => {
-        //         start = 0.0;
-        //     }, 1500);
-        // }
-
-        // use the phase to get a point that is the appropriate distance along the route
-        // this approach syncs the camera and route positions ensuring they move
-        // at roughly equal rates even if they don't contain the same number of points
-        const alongRoute = turf.along(
-            turf.lineString(targetRoute),
-            routeDistance * phase
-        ).geometry.coordinates;
-
-        const alongCamera = turf.along(
-            turf.lineString(cameraRoute),
-            cameraRouteDistance * phase
-        ).geometry.coordinates;
-
-        const camera = map.getFreeCameraOptions();
-
-        // set the position and altitude of the camera
-        camera.position = mapboxgl.MercatorCoordinate.fromLngLat(
-            {
-                lng: alongCamera[0],
-                lat: alongCamera[1],
-            },
-            cameraAltitude
+        // Create a 'LngLatBounds' with both corners at the first coordinate.
+        const bounds = new mapboxgl.LngLatBounds(
+            coordinates[0],
+            coordinates[0]
         );
 
-        // tell the camera to look at a point along the route
-        camera.lookAtPoint({
-            lng: alongRoute[0],
-            lat: alongRoute[1],
+        // Extend the 'LngLatBounds' to include every coordinate in the bounds result.
+        for (const coord of coordinates) {
+            bounds.extend(coord);
+        }
+
+        map.fitBounds(bounds, {
+            padding: 70,
         });
-
-        map.setFreeCameraOptions(camera);
-
-        window.requestAnimationFrame(frame);
     }
-
-    window.requestAnimationFrame(frame);
 }
 
-let iconImage;
+function arraysEqual(arr1, arr2) {
+    return JSON.stringify(arr1) === JSON.stringify(arr2);
+}
 
-// Function I started for the modus selection, but still doesn't do anything
+function animate(id, route) {
+    // Update point geometry to a new position based on counter denoting
+    // the index to access the route.
+    points[id].features[0].geometry.coordinates = route[counters[id]];
+
+    // Update the source with this new data.
+    map.getSource(id).setData(points[id]);
+    document.getElementById("cost-" + id).style.height =
+        String(barCounter[id]) + "%";
+    document.getElementById("carbon-" + id).style.height =
+        String(barCounter[id]) + "%";
+
+    // Request the next frame of animation so long the end has not been reached.
+    if (counters[id] < steps[id]) {
+        requestAnimationFrame(function () {
+            animate(id, route);
+        });
+    }
+
+    counters[id] += 1;
+    barCounter[id] += 0.1;
+}
+
+function updateSlider(count) {
+    points["driving"].features[0].geometry.coordinates =
+        animatedRoutes["driving"][count];
+    points["cycling"].features[0].geometry.coordinates =
+        animatedRoutes["cycling"][count];
+    map.getSource("driving").setData(points["driving"]);
+    map.getSource("cycling").setData(points["cycling"]);
+}
+
 function chooseModus(e) {
     chosenModus = e.id;
-    iconImage = chosenModus === "car" ? "car-15" : "bicycle-15";
 
     // Hide modus choice
     document.getElementById("info").innerHTML = "Wählt ein Ausgangspunkt aus";
     document.getElementById("modus").classList.add("invisible");
 
     // A single point that animates along the route.
-    // Coordinates are initially set to origin.
-    point = {
+    // Coordinates are initially set to center.
+    points["driving"] = {
         type: "FeatureCollection",
         features: [
             {
@@ -260,23 +293,25 @@ function chooseModus(e) {
                 properties: {},
                 geometry: {
                     type: "Point",
-                    coordinates: center,
+                    coordinates: end,
                 },
             },
         ],
     };
 
-    map.addSource("point", {
+    points["cycling"] = points["driving"];
+
+    map.addSource(chosenModus, {
         type: "geojson",
-        data: point,
+        data: points[chosenModus],
     });
 
     map.addLayer({
-        id: "point",
-        source: "point",
+        id: chosenModus,
+        source: chosenModus,
         type: "symbol",
         layout: {
-            "icon-image": iconImage,
+            "icon-image": icons[chosenModus],
             "icon-rotate": ["get", "bearing"],
             "icon-rotation-alignment": "map",
             "icon-allow-overlap": true,
@@ -286,61 +321,71 @@ function chooseModus(e) {
     });
 
     // This keeps the location icon centralized when the map is moved
-    // so the user can choose their starting point
+    // so the user can choose their starting point.
     map.on("movestart", function (e) {
         if (markerFixed) {
-            // point.setLngLat(map.getCenter());
             const center = map.getCenter();
-            point.features[0].geometry.coordinates = [center.lng, center.lat];
-            map.getSource("point").setData(point);
+            points[chosenModus].features[0].geometry.coordinates = [
+                center.lng,
+                center.lat,
+            ];
+            map.getSource(chosenModus).setData(points[chosenModus]);
         }
     });
 
     map.on("move", function (e) {
         if (markerFixed) {
             const center = map.getCenter();
-            // point.setLngLat(map.getCenter());
-            point.features[0].geometry.coordinates = [center.lng, center.lat];
-            map.getSource("point").setData(point);
+            points[chosenModus].features[0].geometry.coordinates = [
+                center.lng,
+                center.lat,
+            ];
+            map.getSource(chosenModus).setData(points[chosenModus]);
         }
     });
 
     map.on("moveend", function (e) {
         if (markerFixed) {
             const center = map.getCenter();
-            // point.setLngLat(map.getCenter());
-            point.features[0].geometry.coordinates = [center.lng, center.lat];
-            map.getSource("point").setData(point);
+            points[chosenModus].features[0].geometry.coordinates = [
+                center.lng,
+                center.lat,
+            ];
+            map.getSource(chosenModus).setData(points[chosenModus]);
         }
     });
-
-    map.on("click", function () {
-        console.log("clicked");
-    });
-
-    const event = new MouseEvent({
-        clientX: 200,
-        clientY: 200,
-        bubbles: true,
-    });
-
-    // map.fire("click", {
-    //     latLng: map.getCenter(),
-    //     point: map.project(map.getCenter()),
-    //     originalEvent: {},
-    // });
 }
 
 // On 'Enter' center map on choice
-document.onkeydown = function (e) {
+document.onkeydown = async function (e) {
     if (e.keyCode === 13) {
         // if enter pressed
         markerFixed = false;
 
-        let point = map.getCenter();
+        let center = map.getCenter();
 
-        start = [point.lng, point.lat];
+        start = [center.lng, center.lat];
 
-        getRoutes(start, end);
+        // Add end point to the map
+        let marker = new mapboxgl.Marker({ color: colors["cycling"] })
+            .setLngLat(end)
+            .addTo(map);
+
+        await getRoute(start, end, "driving");
+        await getRoute(start, end, "cycling");
+
+        calculateSteps("driving");
+        calculateSteps("cycling");
+
+        console.log(data);
+        console.log(steps);
+
+        drawRoute("driving");
+        drawRoute("cycling");
+
+        console.log(animatedRoutes);
+
+        animate("driving", animatedRoutes["driving"]);
+        animate("cycling", animatedRoutes["cycling"]);
     }
 };
