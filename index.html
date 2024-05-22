@@ -15,12 +15,6 @@
             href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v3.1.1/mapbox-gl-directions.css"
             type="text/css"
         />
-        <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-            integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-            crossorigin="anonymous"
-        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
@@ -37,60 +31,76 @@
         <!-- Map Container -->
         <div id="map"></div>
         <!-- Title -->
-        <span id="info">Wählt ein Mobilitätsmodus aus</span>
+        <div id="info">Wählt ein Mobilitätsmodus aus</div>
         <!-- Modus Container -->
-        <div
-            id="modus"
-            class="container d-flex justify-content-center align-items-center custom-container"
-        >
-            <div class="row">
-                <div class="col">
-                    <button
-                        type="button"
-                        id="cycling"
-                        onclick="chooseModus(this)"
-                        class="round-btn text-center"
-                        data-bs-toggle="button"
-                    >
-                        <i class="fas fa-bicycle"></i>
-                    </button>
-                </div>
-                <div class="col">
-                    <button
-                        type="button"
-                        id="driving"
-                        onclick="chooseModus(this)"
-                        class="round-btn text-center"
-                        data-bs-toggle="button"
-                    >
-                        <i class="fas fa-car"></i>
-                    </button>
-                </div>
-            </div>
+        <div id="modus" class="modus-container">
+            <button
+                id="cycling"
+                onclick="chooseModus(this)"
+                class="round-btn text-center"
+            >
+                <svg class="fill-btn">
+                    <use class="icon-btn" href="cycling.svg#cycling"></use>
+                </svg>
+            </button>
+
+            <button
+                id="driving"
+                onclick="chooseModus(this)"
+                class="round-btn text-center"
+            >
+                <svg class="fill-btn">
+                    <use class="icon-btn" href="driving.svg#driving"></use>
+                </svg>
+            </button>
         </div>
         <!-- Chart Container -->
         <div class="chart-wrapper">
-            <!-- Cycling Graph -->
+            <!-- Chosen Modus Icon -->
+            <div class="icon-container chosen">
+                <svg class="fill-chosen">
+                    <use id="icon-chosen" href="#"></use>
+                </svg>
+            </div>
+            <!-- Chosen Modus Graph -->
             <div class="chart-container">
-                <span class="bar-container">
-                    <span id="carbon-cycling" class="bar"></span>
+                <span class="bar-container chosen">
+                    <span id="duration-chosen" class="bar chosen"></span>
                 </span>
-                <span class="bar-container">
-                    <span id="cost-cycling" class="bar"></span>
+                <span class="bar-container chosen">
+                    <span id="cost-chosen" class="bar chosen"></span>
+                </span>
+                <span class="bar-container chosen">
+                    <span id="emission-chosen" class="bar chosen"></span>
                 </span>
             </div>
-            <!-- Driving Graph -->
+            <!-- Graph Labels -->
+            <div class="label-container">
+                <span class="bar-label">Duration</span>
+                <span class="bar-label">Cost</span>
+                <span class="bar-label">Emission</span>
+            </div>
+            <!-- Other Modus Graph -->
             <div class="chart-container">
-                <span class="bar-container">
-                    <span id="carbon-driving" class="bar"></span>
+                <span class="bar-container other">
+                    <span id="duration-other" class="bar other"></span>
                 </span>
-                <span class="bar-container">
-                    <span id="cost-driving" class="bar"></span>
+                <span class="bar-container other">
+                    <span id="cost-other" class="bar other"></span>
                 </span>
+                <span class="bar-container other">
+                    <span id="emission-other" class="bar other"></span>
+                </span>
+            </div>
+            <!-- Other Modus Icon -->
+            <div class="icon-container other">
+                <svg class="fill-other">
+                    <use id="icon-other" href="#"></use>
+                </svg>
             </div>
         </div>
         <!-- Slider -->
-        <div class="slidecontainer">
+        <!-- <div class="slidecontainer">
             <input
                 type="range"
                 min="0"
@@ -100,13 +110,8 @@
                 id="slider"
                 onchange="updateSlider(this.value)"
             />
-        </div>
+        </div> -->
 
-        <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-            crossorigin="anonymous"
-        ></script>
         <script src="https://docs.mapbox.com/mapbox-gl-js/assets/routes.js"></script>
         <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
         <script src="index.js"></script>

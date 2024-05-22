@@ -1,25 +1,13 @@
-// Create Map
+// Mapbox Access Token
 mapboxgl.accessToken =
     "pk.eyJ1IjoiYWJqYXJkaW0iLCJhIjoiY2tmZmpyM3d3MGZkdzJ1cXZ3a3kza3BybiJ9.2CgI2GbcJysBRHmh7WwdVA";
 
-const end = [8.872643564339544, 51.94003709534788]; // The DDW Location
+// The DDW Location
+const end = [8.872643564339544, 51.94003709534788];
 
 let markerFixed = true;
 
-// Define the radius in kilometers
-var radiusInKm = 10;
-
-// Calculate the bounding box using Turf.js
-var centerPoint = turf.point(end);
-var buffered = turf.buffer(centerPoint, radiusInKm, { units: "kilometers" });
-var bbox = turf.bbox(buffered);
-
-// Convert the bounding box to a format Mapbox GL JS understands
-var bounds = [
-    [bbox[0], bbox[1]], // [minLng, minLat]
-    [bbox[2], bbox[3]], // [maxLng, maxLat]
-];
-
+// Create map
 const map = new mapboxgl.Map({
     container: "map",
     style: "mapbox://styles/mapbox/dark-v9",
@@ -27,6 +15,17 @@ const map = new mapboxgl.Map({
     zoom: 15.53,
 });
 
+// Restrict map panning to a radius
+var radiusInKm = 10;
+// Calculate bounding box
+var centerPoint = turf.point(end);
+var buffered = turf.buffer(centerPoint, radiusInKm, { units: "kilometers" });
+var bbox = turf.bbox(buffered);
+// Convert bounding box to Mapbox format
+var bounds = [
+    [bbox[0], bbox[1]], // [minLng, minLat]
+    [bbox[2], bbox[3]], // [maxLng, maxLat]
+];
 // Set the max bounds on the map
 map.on("load", function () {
     map.setMaxBounds(bounds);
@@ -101,11 +100,78 @@ let offsets = {
 };
 
 let colors = {
-    driving: "#FF6D00",
+    driving: "#071689",
     cycling: "#071689",
 };
 
 let barCounter = {
+    driving: {
+        duration: 0.0,
+        cost: 0.0,
+        emission: 0.0,
+    },
+    cycling: {
+        duration: 0.0,
+        cost: 0.0,
+        emission: 0.0,
+    },
+};
+
+let barPercentage = {
+    driving: {
+        duration: 0,
+        cost: 0,
+        emission: 0,
+    },
+    cycling: {
+        duration: 0,
+        cost: 0,
+        emission: 0,
+    },
+};
+
+let barIncrement = {
+    driving: {
+        duration: 0.0,
+        cost: 0.0,
+        emission: 0.0,
+    },
+    cycling: {
+        duration: 0.0,
+        cost: 0.0,
+        emission: 0.0,
+    },
+};
+
+let barWidth = {
+    driving: {
+        duration: 0.0,
+        cost: 0.0,
+        emission: 0.0,
+    },
+    cycling: {
+        duration: 0.0,
+        cost: 0.0,
+        emission: 0.0,
+    },
+};
+
+let costPerKm = {
+    driving: 0.89, // €
+    cycling: 0.14,
+};
+
+let emissionPerKm = {
+    driving: 271.0, // g CO2
+    cycling: 21.0,
+};
+
+let cost = {
+    driving: 0.0,
+    cycling: 0.0,
+};
+
+let emission = {
     driving: 0.0,
     cycling: 0.0,
 };
@@ -140,6 +206,38 @@ function calculateSteps(id) {
         steps[otherId] =
             stepsOtherId > animationRange[1] ? animationRange[1] : stepsOtherId;
     }
+}
+
+function calculatePercentages() {
+    for (id of ["cycling", "driving"]) {
+        let duration = data[id]["duration"];
+        cost[id] = (data[id].distance / 1000) * costPerKm[id];
+        emission[id] = (data[id].distance / 1000) * emissionPerKm[id];
+    }
+
+    let maxCost = Math.max(cost["driving"], cost["cycling"]);
+    let maxEmission = Math.max(emission["driving"], emission["cycling"]);
+    let maxDuration = Math.max(
+        data["driving"].duration,
+        data["cycling"].duration
+    );
+
+    for (id of ["cycling", "driving"]) {
+        barPercentage[id].duration = Math.floor(
+            (data[id]["duration"] / maxDuration) * 100
+        );
+        barPercentage[id].cost = Math.floor((cost[id] / maxCost) * 100);
+        barPercentage[id].emission = Math.floor(
+            (emission[id] / maxEmission) * 100
+        );
+
+        barIncrement[id].duration = barPercentage[id].duration / steps[id];
+        barIncrement[id].cost = barPercentage[id].cost / steps[id];
+        barIncrement[id].emission = barPercentage[id].emission / steps[id];
+    }
+
+    console.log(barPercentage);
+    console.log(barIncrement);
 }
 
 // Function to show requested route on the map
@@ -235,13 +333,9 @@ function drawRoute(id) {
         }
 
         map.fitBounds(bounds, {
-            padding: 70,
+            padding: 150,
         });
     }
-}
-
-function arraysEqual(arr1, arr2) {
-    return JSON.stringify(arr1) === JSON.stringify(arr2);
 }
 
 function animate(id, route) {
@@ -251,10 +345,46 @@ function animate(id, route) {
 
     // Update the source with this new data.
     map.getSource(id).setData(points[id]);
-    document.getElementById("cost-" + id).style.height =
-        String(barCounter[id]) + "%";
-    document.getElementById("carbon-" + id).style.height =
-        String(barCounter[id]) + "%";
+
+    // Update the bar graphs
+    let barDuration =
+        id === chosenModus
+            ? document.getElementById("duration-chosen")
+            : document.getElementById("duration-other");
+    let barCost =
+        id === chosenModus
+            ? document.getElementById("cost-chosen")
+            : document.getElementById("cost-other");
+    let barEmission =
+        id === chosenModus
+            ? document.getElementById("emission-chosen")
+            : document.getElementById("emission-other");
+
+    barWidth[id].duration += barIncrement[id].duration;
+    barWidth[id].cost += barIncrement[id].cost;
+    barWidth[id].emission += barIncrement[id].emission;
+
+    barDuration.style.width = String(barWidth[id].duration) + "%";
+    barCost.style.width = String(barWidth[id].cost) + "%";
+    barEmission.style.width = String(barWidth[id].emission) + "%";
+
+    let stepDuration = (data[id]["duration"] / steps[id]) * counters[id];
+    barDuration.innerHTML = secondsToHms(stepDuration);
+    let stepCost = (cost[id] / steps[id]) * counters[id];
+    barCost.innerHTML = stepCost.toFixed(2) + " €";
+    let stepEmission = (emission[id] / steps[id]) * counters[id];
+    barEmission.innerHTML =
+        stepEmission < 1000
+            ? stepEmission.toFixed(2) + " g CO2"
+            : (stepEmission / 1000).toFixed(2) + " kg CO2";
+
+    // if (counters[id] === 500) {
+    //     console.log(data[id]["duration"]);
+    //     console.log(steps[id]);
+    //     console.log(counters[id]);
+    //     console.log(stepDuration);
+    //     console.log(stepDuration < 60);
+    // }
 
     // Request the next frame of animation so long the end has not been reached.
     if (counters[id] < steps[id]) {
@@ -264,24 +394,45 @@ function animate(id, route) {
     }
 
     counters[id] += 1;
-    barCounter[id] += 0.1;
+    // barCounter[id] += 0.1;
 }
 
-function updateSlider(count) {
-    points["driving"].features[0].geometry.coordinates =
-        animatedRoutes["driving"][count];
-    points["cycling"].features[0].geometry.coordinates =
-        animatedRoutes["cycling"][count];
-    map.getSource("driving").setData(points["driving"]);
-    map.getSource("cycling").setData(points["cycling"]);
+function secondsToHms(d) {
+    d = Number(d);
+    let h = Math.floor(d / 3600);
+    let m = Math.floor((d % 3600) / 60);
+
+    let hDisplay = h > 0 ? h + " h" : "";
+    let mDisplay = m + " min";
+    let display = h > 0 ? (hDisplay + m > 0 ? mDisplay : "") : mDisplay;
+    return display;
 }
 
+// function updateSlider(count) {
+//     points["driving"].features[0].geometry.coordinates =
+//         animatedRoutes["driving"][count];
+//     points["cycling"].features[0].geometry.coordinates =
+//         animatedRoutes["cycling"][count];
+//     map.getSource("driving").setData(points["driving"]);
+//     map.getSource("cycling").setData(points["cycling"]);
+// }
+
+let chosenModus;
+let otherModus;
 function chooseModus(e) {
     chosenModus = e.id;
+    otherModus = chosenModus === "driving" ? "cycling" : "driving";
+
+    let chosenIcon = document.getElementById("icon-chosen");
+    chosenIcon.setAttribute("href", chosenModus + ".svg#" + chosenModus);
+    let otherIcon = document.getElementById("icon-other");
+    otherIcon.setAttribute("href", otherModus + ".svg#" + otherModus);
+
+    colors[chosenModus] = "#ff6d00";
 
     // Hide modus choice
     document.getElementById("info").innerHTML = "Wählt ein Ausgangspunkt aus";
-    document.getElementById("modus").classList.add("invisible");
+    document.getElementById("modus").style.display = "none";
 
     // A single point that animates along the route.
     // Coordinates are initially set to center.
@@ -377,13 +528,14 @@ document.onkeydown = async function (e) {
         calculateSteps("driving");
         calculateSteps("cycling");
 
-        console.log(data);
-        console.log(steps);
+        calculatePercentages();
+
+        document.getElementById("info").style.display = "none";
+        document.getElementsByClassName("chart-wrapper")[0].style.display =
+            "grid";
 
         drawRoute("driving");
         drawRoute("cycling");
-
-        console.log(animatedRoutes);
 
         animate("driving", animatedRoutes["driving"]);
         animate("cycling", animatedRoutes["cycling"]);
