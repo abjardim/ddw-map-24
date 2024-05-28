@@ -10,10 +10,13 @@ let markerFixed = true;
 // Create map
 const map = new mapboxgl.Map({
     container: "map",
-    style: "mapbox://styles/mapbox/light-v11",
+    style: "mapbox://styles/abjardim/clwq8mlvp010y01pn32ro63bq",
     center: end,
     zoom: 15.53,
 });
+
+const width = 20;
+const height = 40;
 
 // Restrict map panning to a radius
 var radiusInKm = 10;
@@ -65,8 +68,8 @@ let points = {
 };
 
 let icons = {
-    driving: "car-15",
-    cycling: "bicycle-15",
+    driving: "driving",
+    cycling: "cycling",
 };
 
 let counters = {
@@ -100,8 +103,8 @@ let offsets = {
 };
 
 let colors = {
-    driving: "#071689",
-    cycling: "#071689",
+    driving: "#FFFFFF",
+    cycling: "#FFFFFF",
 };
 
 let barCounter = {
@@ -303,19 +306,52 @@ function drawRoute(id) {
         type: "geojson",
         data: points[id],
     });
-    map.addLayer({
-        id: id,
-        source: id,
-        type: "symbol",
-        layout: {
-            "icon-image": icons[id],
-            "icon-rotate": ["get", "bearing"],
-            "icon-rotation-alignment": "map",
-            "icon-allow-overlap": true,
-            "icon-ignore-placement": true,
-            "icon-size": 3,
-        },
-    });
+
+    let img = id === chosenModus ? id + "-orange" : id + "-white";
+
+    if (id !== chosenModus) {
+        map.loadImage(`img/${img}.png`, (error, image) => {
+            if (error) throw error;
+
+            // Add the image to the map style.
+            map.addImage(img, image);
+
+            // Add a layer to use the image to represent the data.
+            map.addLayer({
+                id: id,
+                type: "symbol",
+                source: id, // reference the data source
+                layout: {
+                    "icon-image": img, // reference the image
+                    "icon-size": 0.15,
+                },
+            });
+        });
+    } else {
+        map.addLayer({
+            id: id,
+            type: "symbol",
+            source: id, // reference the data source
+            layout: {
+                "icon-image": img, // reference the image
+                "icon-size": 0.15,
+            },
+        });
+    }
+
+    // map.addLayer({
+    //     id: id,
+    //     source: id,
+    //     type: "symbol",
+    //     layout: {
+    //         "icon-image": icons[id],
+    //         "icon-rotate": ["get", "bearing"],
+    //         "icon-rotation-alignment": "map",
+    //         "icon-allow-overlap": true,
+    //         "icon-ignore-placement": true,
+    //         "icon-size": 3,
+    //     },
+    // });
 
     if (map.getSource("drivingRoute") && map.getSource("cyclingRoute")) {
         // Geographic coordinates of the LineString
@@ -457,19 +493,39 @@ function chooseModus(e) {
         data: points[chosenModus],
     });
 
-    map.addLayer({
-        id: chosenModus,
-        source: chosenModus,
-        type: "symbol",
-        layout: {
-            "icon-image": icons[chosenModus],
-            "icon-rotate": ["get", "bearing"],
-            "icon-rotation-alignment": "map",
-            "icon-allow-overlap": true,
-            "icon-ignore-placement": true,
-            "icon-size": 3,
-        },
+    let img = chosenModus + "-orange";
+
+    map.loadImage(`img/${img}.png`, (error, image) => {
+        if (error) throw error;
+
+        // Add the image to the map style.
+        map.addImage(img, image);
+
+        // Add a layer to use the image to represent the data.
+        map.addLayer({
+            id: chosenModus,
+            type: "symbol",
+            source: chosenModus, // reference the data source
+            layout: {
+                "icon-image": img, // reference the image
+                "icon-size": 0.15,
+            },
+        });
     });
+
+    // map.addLayer({
+    //     id: chosenModus,
+    //     source: chosenModus,
+    //     type: "symbol",
+    //     layout: {
+    //         "icon-image": icons[chosenModus],
+    //         "icon-rotate": ["get", "bearing"],
+    //         "icon-rotation-alignment": "map",
+    //         "icon-allow-overlap": true,
+    //         "icon-ignore-placement": true,
+    //         "icon-size": 3,
+    //     },
+    // });
 
     // This keeps the location icon centralized when the map is moved
     // so the user can choose their starting point.
