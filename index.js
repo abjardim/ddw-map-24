@@ -320,7 +320,7 @@ function drawRoute(id) {
         type: "symbol",
         layout: {
             "icon-image": icon,
-            // "icon-allow-overlap": true,
+            "icon-allow-overlap": true,
             "icon-anchor": id === "cycling" ? "bottom" : "top",
             "icon-size": iconSize[id],
         },
