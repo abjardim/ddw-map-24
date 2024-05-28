@@ -10,7 +10,7 @@ let markerFixed = true;
 // Create map
 const map = new mapboxgl.Map({
     container: "map",
-    style: "mapbox://styles/mapbox/dark-v9",
+    style: "mapbox://styles/mapbox/light-v11",
     center: end,
     zoom: 15.53,
 });
