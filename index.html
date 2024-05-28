@@ -29,18 +29,23 @@
     </head>
     <body>
         <!-- Map Container -->
-        <div id="map"></div>
+        <div id="map" tabindex="-1"></div>
         <!-- Title -->
-        <div id="info">Wählt ein Mobilitätsmodus aus</div>
+        <div id="info">Wählt einen Mobilitätsmodus aus</div>
         <!-- Modus Container -->
         <div id="modus" class="modus-container">
             <button
                 id="cycling"
                 onclick="chooseModus(this)"
                 class="round-btn text-center"
+                tabindex="0"
             >
-                <svg class="fill-btn">
-                    <use class="icon-btn" href="cycling.svg#cycling"></use>
+                <svg class="fill-btn-cycling">
+                    <use
+                        id="icon-cycling"
+                        class="icon-btn"
+                        href="cycling.svg#cycling"
+                    ></use>
                 </svg>
             </button>
 
@@ -48,9 +53,14 @@
                 id="driving"
                 onclick="chooseModus(this)"
                 class="round-btn text-center"
+                tabindex="1"
             >
-                <svg class="fill-btn">
-                    <use class="icon-btn" href="driving.svg#driving"></use>
+                <svg class="fill-btn-driving">
+                    <use
+                        id="icon-driving"
+                        class="icon-btn"
+                        href="driving.svg#driving"
+                    ></use>
                 </svg>
             </button>
         </div>

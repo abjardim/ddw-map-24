@@ -159,6 +159,11 @@ let barWidth = {
     },
 };
 
+let iconSize = {
+    driving: 0.12,
+    cycling: 0.8,
+};
+
 let costPerKm = {
     driving: 0.89, // €
     cycling: 0.14,
@@ -307,51 +312,19 @@ function drawRoute(id) {
         data: points[id],
     });
 
-    let img = id === chosenModus ? id + "-orange" : id + "-white";
+    let icon = id === chosenModus ? id + "-orange" : id + "-white";
 
-    if (id !== chosenModus) {
-        map.loadImage(`img/${img}.png`, (error, image) => {
-            if (error) throw error;
-
-            // Add the image to the map style.
-            map.addImage(img, image);
-
-            // Add a layer to use the image to represent the data.
-            map.addLayer({
-                id: id,
-                type: "symbol",
-                source: id, // reference the data source
-                layout: {
-                    "icon-image": img, // reference the image
-                    "icon-size": 0.15,
-                },
-            });
-        });
-    } else {
-        map.addLayer({
-            id: id,
-            type: "symbol",
-            source: id, // reference the data source
-            layout: {
-                "icon-image": img, // reference the image
-                "icon-size": 0.15,
-            },
-        });
-    }
-
-    // map.addLayer({
-    //     id: id,
-    //     source: id,
-    //     type: "symbol",
-    //     layout: {
-    //         "icon-image": icons[id],
-    //         "icon-rotate": ["get", "bearing"],
-    //         "icon-rotation-alignment": "map",
-    //         "icon-allow-overlap": true,
-    //         "icon-ignore-placement": true,
-    //         "icon-size": 3,
-    //     },
-    // });
+    map.addLayer({
+        id: id,
+        source: id,
+        type: "symbol",
+        layout: {
+            "icon-image": icon,
+            // "icon-allow-overlap": true,
+            "icon-anchor": id === "cycling" ? "bottom" : "top",
+            "icon-size": iconSize[id],
+        },
+    });
 
     if (map.getSource("drivingRoute") && map.getSource("cyclingRoute")) {
         // Geographic coordinates of the LineString
@@ -464,6 +437,12 @@ function chooseModus(e) {
     let otherIcon = document.getElementById("icon-other");
     otherIcon.setAttribute("href", otherModus + ".svg#" + otherModus);
 
+    let cyclingIcon =
+        chosenModus === "cycling"
+            ? chosenIcon.parentElement
+            : otherIcon.parentElement;
+    cyclingIcon.style.width = "8rem";
+
     colors[chosenModus] = "#ff6d00";
 
     // Hide modus choice
@@ -493,39 +472,18 @@ function chooseModus(e) {
         data: points[chosenModus],
     });
 
-    let img = chosenModus + "-orange";
+    let icon = chosenModus + "-orange";
 
-    map.loadImage(`img/${img}.png`, (error, image) => {
-        if (error) throw error;
-
-        // Add the image to the map style.
-        map.addImage(img, image);
-
-        // Add a layer to use the image to represent the data.
-        map.addLayer({
-            id: chosenModus,
-            type: "symbol",
-            source: chosenModus, // reference the data source
-            layout: {
-                "icon-image": img, // reference the image
-                "icon-size": 0.15,
-            },
-        });
+    map.addLayer({
+        id: chosenModus,
+        source: chosenModus,
+        type: "symbol",
+        layout: {
+            "icon-image": icon,
+            "icon-allow-overlap": true,
+            "icon-size": iconSize[chosenModus],
+        },
     });
-
-    // map.addLayer({
-    //     id: chosenModus,
-    //     source: chosenModus,
-    //     type: "symbol",
-    //     layout: {
-    //         "icon-image": icons[chosenModus],
-    //         "icon-rotate": ["get", "bearing"],
-    //         "icon-rotation-alignment": "map",
-    //         "icon-allow-overlap": true,
-    //         "icon-ignore-placement": true,
-    //         "icon-size": 3,
-    //     },
-    // });
 
     // This keeps the location icon centralized when the map is moved
     // so the user can choose their starting point.
@@ -565,7 +523,7 @@ function chooseModus(e) {
 
 // On 'Enter' center map on choice
 document.onkeydown = async function (e) {
-    if (e.keyCode === 13) {
+    if (e.keyCode === 13 && chosenModus) {
         // if enter pressed
         markerFixed = false;
 

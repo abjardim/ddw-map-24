@@ -12,6 +12,7 @@ body {
     font-family: "Press Start 2P", system-ui;
     font-weight: 400;
     font-style: normal;
+    overflow: hidden;
 }
 
 #map {
@@ -19,6 +20,11 @@ body {
     top: 0;
     bottom: 0;
     width: 100%;
+    user-select: none;
+}
+
+.mapboxgl-control-container {
+    display: none;
 }
 
 #info {
@@ -75,16 +81,27 @@ body {
     color: var(--main-secondary-color);
     text-align: center;
 }
-.round-btn:hover {
+.round-btn:hover,
+.round-btn:focus {
     background-color: var(--main-color);
 }
 /* .round-btn.active {
     background-color: var(--main-color);
 } */
 
-.fill-btn {
-    width: 13rem;
-    height: 13rem;
+.fill-btn-driving {
+    width: 12rem;
+    height: 12rem;
+}
+
+.fill-btn-cycling {
+    width: 16rem;
+    height: 16rem;
+    transform: translateX(10%) translateY(10%);
+}
+
+.fill-btn-driving,
+.fill-btn-cycling {
     fill: var(--main-secondary-color);
 }
 
@@ -98,7 +115,7 @@ body {
     width: 100%;
     height: 30%;
     display: none;
-    grid-template-columns: 7% 38% 10% 38% 7%;
+    grid-template-columns: 8% 37% 10% 37% 8%;
     grid-row: 1;
     top: 0;
     pointer-events: none;
@@ -112,7 +129,10 @@ body {
 }
 
 .chart-container {
-    padding: 30px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 .label-container {
@@ -132,13 +152,12 @@ body {
 
 .icon-other,
 .icon-chosen {
-    height: 7rem;
-    width: 7rem;
+    width: 8rem;
 }
 
 .fill-chosen,
 .fill-other {
-    width: 100%;
+    width: 90%;
     height: 100%;
 }
 
@@ -176,13 +195,17 @@ body {
     width: 0%;
     background-color: var(--main-bg-color);
     white-space: nowrap;
-    color: white;
     font-size: 0.8rem;
     line-height: 10px;
 }
 
 .bar.chosen {
     background-color: var(--main-color);
+    color: white;
+}
+
+.bar.other {
+    color: var(--main-secondary-color);
 }
 
 .slidecontainer {
