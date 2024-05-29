@@ -28,10 +28,84 @@
         <link href="style.css" rel="stylesheet" />
     </head>
     <body>
+        <!-- Modal -->
+        <div class="modal">
+            <div id="modal-language" class="modal-inner">
+                <div>Choose a language/Wählt eine Sprache</div>
+                <button id="en" class="rect-btn" onclick="chooseLanguage(this)">
+                    English
+                </button>
+                <button id="de" class="rect-btn" onclick="chooseLanguage(this)">
+                    Deutsch
+                </button>
+            </div>
+            <div id="modal-start" class="modal-inner">
+                <p class="en">
+                    Everybody knows that cycling is more sustainable than
+                    driving a car. But do you know exactly how much more
+                    sustainable it is? Or how much cheaper? Or that sometimes, a
+                    car is not much faster than a bicycle, but just a bit
+                    faster?
+                </p>
+                <p class="en">
+                    Aside from the question of comfort, the main reason many
+                    people drive a car is to reach their destination faster.
+                    However, for trips up to 10 km, the difference in time
+                    between driving a car and cycling is usually not
+                    significant.
+                </p>
+                <p class="en">
+                    We want to show you this comparison for a trip to our DDW
+                    location. Choose any starting point within a 10 km radius
+                    from here and select a mode of transportation to see how
+                    they compare.
+                </p>
+                <p class="en">
+                    Afterward, we want to ask you: would you consider cycling
+                    more after learning this information?
+                </p>
+                <p class="en">
+                    Use the joystick to select buttons, move the map, and press
+                    the button to confirm your choice.
+                </p>
+                <p class="de">
+                    Jeder weiß, dass Radfahren nachhaltiger ist als Autofahren.
+                    Aber wissen Sie genau, wie viel nachhaltiger es ist? Oder
+                    wie viel günstiger? Oder dass ein Auto manchmal nicht viel,
+                    sondern nur ein bisschen schneller ist als ein Fahrrad?
+                </p>
+                <p class="de">
+                    Abgesehen von der Frage des Komforts ist der Hauptgrund,
+                    warum viele Menschen ein Auto fahren, der, schneller an ihr
+                    Ziel zu gelangen. Doch bei Fahrten bis zu 10 km ist der
+                    Zeitunterschied zwischen Autofahren und Radfahren meist
+                    nicht signifikant.
+                </p>
+                <p class="de">
+                    Wir möchten Ihnen diesen Vergleich für eine Fahrt zu unserem
+                    DDW-Standort zeigen. Wählen Sie einen beliebigen Startpunkt
+                    innerhalb eines 10-km-Radius von hier und eine
+                    Fortbewegungsart, um zu sehen, wie sie sich vergleichen.
+                </p>
+                <p class="de">
+                    Anschließend möchten wir Sie fragen: Würden Sie nach diesen
+                    Informationen öfter Rad fahren?
+                </p>
+                <p class="de">
+                    Verwenden Sie den Joystick, um Tasten auszuwählen, die Karte
+                    zu bewegen und drücken Sie die Taste, um Ihre Auswahl zu
+                    bestätigen.
+                </p>
+                <button class="rect-btn" onclick="startGame()">Start</button>
+            </div>
+        </div>
         <!-- Map Container -->
         <div id="map" tabindex="-1"></div>
         <!-- Title -->
-        <div id="info">Wählt einen Mobilitätsmodus aus</div>
+        <div id="info">
+            <div class="de">Wählt einen Mobilitätsmodus aus</div>
+            <div class="en">Choose a transportation mode</div>
+        </div>
         <!-- Modus Container -->
         <div id="modus" class="modus-container">
             <button
@@ -75,6 +149,9 @@
             <!-- Chosen Modus Graph -->
             <div class="chart-container">
                 <span class="bar-container chosen">
+                    <span id="distance-chosen" class="bar chosen"></span>
+                </span>
+                <span class="bar-container chosen">
                     <span id="duration-chosen" class="bar chosen"></span>
                 </span>
                 <span class="bar-container chosen">
@@ -86,12 +163,19 @@
             </div>
             <!-- Graph Labels -->
             <div class="label-container">
-                <span class="bar-label">Duration</span>
-                <span class="bar-label">Cost</span>
+                <span class="bar-label en">Distance</span>
+                <span class="bar-label de">Distanz</span>
+                <span class="bar-label en">Time</span>
+                <span class="bar-label de">Zeit</span>
+                <span class="bar-label en">Cost</span>
+                <span class="bar-label de">Kosten</span>
                 <span class="bar-label">Emission</span>
             </div>
             <!-- Other Modus Graph -->
             <div class="chart-container">
+                <span class="bar-container other">
+                    <span id="distance-other" class="bar other"></span>
+                </span>
                 <span class="bar-container other">
                     <span id="duration-other" class="bar other"></span>
                 </span>

@@ -148,11 +148,13 @@ let barIncrement = {
 
 let barWidth = {
     driving: {
+        distance: 0.0,
         duration: 0.0,
         cost: 0.0,
         emission: 0.0,
     },
     cycling: {
+        distance: 0.0,
         duration: 0.0,
         cost: 0.0,
         emission: 0.0,
@@ -183,6 +185,24 @@ let emission = {
     driving: 0.0,
     cycling: 0.0,
 };
+
+function chooseLanguage(btn) {
+    console.log(btn.id);
+    let toHide = btn.id === "de" ? "en" : "de";
+    document.getElementsByClassName(toHide);
+    for (let element of document.getElementsByClassName(toHide)) {
+        element.style.display = "none";
+    }
+    document.getElementById("modal-language").style.display = "none";
+    document.getElementById("modal-start").style.display = "block";
+}
+
+function startGame() {
+    document.getElementById("modal-start").style.display = "none";
+    document.getElementsByClassName("modal")[0].style.visibility = "hidden";
+    document.getElementById("modus").style.visibility = "visible";
+    document.getElementById("info").style.visibility = "visible";
+}
 
 async function requestRoute(modus, start, end) {
     const query = await fetch(
@@ -229,8 +249,15 @@ function calculatePercentages() {
         data["driving"].duration,
         data["cycling"].duration
     );
+    let maxDistance = Math.max(
+        data["driving"].distance,
+        data["cycling"].distance
+    );
 
     for (id of ["cycling", "driving"]) {
+        barPercentage[id].distance = Math.floor(
+            (data[id]["distance"] / maxDistance) * 100
+        );
         barPercentage[id].duration = Math.floor(
             (data[id]["duration"] / maxDuration) * 100
         );
@@ -239,13 +266,11 @@ function calculatePercentages() {
             (emission[id] / maxEmission) * 100
         );
 
+        barIncrement[id].distance = barPercentage[id].distance / steps[id];
         barIncrement[id].duration = barPercentage[id].duration / steps[id];
         barIncrement[id].cost = barPercentage[id].cost / steps[id];
         barIncrement[id].emission = barPercentage[id].emission / steps[id];
     }
-
-    console.log(barPercentage);
-    console.log(barIncrement);
 }
 
 // Function to show requested route on the map
@@ -356,6 +381,10 @@ function animate(id, route) {
     map.getSource(id).setData(points[id]);
 
     // Update the bar graphs
+    let barDistance =
+        id === chosenModus
+            ? document.getElementById("distance-chosen")
+            : document.getElementById("distance-other");
     let barDuration =
         id === chosenModus
             ? document.getElementById("duration-chosen")
@@ -369,14 +398,21 @@ function animate(id, route) {
             ? document.getElementById("emission-chosen")
             : document.getElementById("emission-other");
 
+    barWidth[id].distance += barIncrement[id].distance;
     barWidth[id].duration += barIncrement[id].duration;
     barWidth[id].cost += barIncrement[id].cost;
     barWidth[id].emission += barIncrement[id].emission;
 
+    barDistance.style.width = String(barWidth[id].distance) + "%";
     barDuration.style.width = String(barWidth[id].duration) + "%";
     barCost.style.width = String(barWidth[id].cost) + "%";
     barEmission.style.width = String(barWidth[id].emission) + "%";
 
+    let stepDistance = (data[id]["distance"] / steps[id]) * counters[id];
+    barDistance.innerHTML =
+        stepDistance < 1000
+            ? stepDistance.toFixed(2) + " m"
+            : (stepDistance / 1000).toFixed(2) + " km";
     let stepDuration = (data[id]["duration"] / steps[id]) * counters[id];
     barDuration.innerHTML = secondsToHms(stepDuration);
     let stepCost = (cost[id] / steps[id]) * counters[id];
@@ -544,9 +580,9 @@ document.onkeydown = async function (e) {
 
         calculatePercentages();
 
-        document.getElementById("info").style.display = "none";
-        document.getElementsByClassName("chart-wrapper")[0].style.display =
-            "grid";
+        document.getElementById("info").style.visibility = "hidden";
+        document.getElementsByClassName("chart-wrapper")[0].style.visibility =
+            "visible";
 
         drawRoute("driving");
         drawRoute("cycling");
