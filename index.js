@@ -17,6 +17,10 @@ const map = new mapboxgl.Map({
 
 const width = 20;
 const height = 40;
+let mapInteractive = false;
+let languageScreen = true;
+let startScreen = false;
+let modusScreen = false;
 
 // Restrict map panning to a radius
 var radiusInKm = 10;
@@ -32,11 +36,12 @@ var bounds = [
 // Set the max bounds on the map
 map.on("load", function () {
     map.setMaxBounds(bounds);
+    toggleMap();
 });
 
 let start;
 
-let animationRange = [500, 1000];
+let animationRange = [50, 100];
 
 let points = {
     driving: {
@@ -195,6 +200,8 @@ function chooseLanguage(btn) {
     }
     document.getElementById("modal-language").style.display = "none";
     document.getElementById("modal-start").style.display = "block";
+    languageScreen = false;
+    startScreen = true;
 }
 
 function startGame() {
@@ -202,6 +209,23 @@ function startGame() {
     document.getElementsByClassName("modal")[0].style.visibility = "hidden";
     document.getElementById("modus").style.visibility = "visible";
     document.getElementById("info").style.visibility = "visible";
+    document.getElementById("info-modus").style.display = "block";
+    startScreen = false;
+    modusScreen = true;
+}
+
+function showYearBalance() {
+    console.log("showYearBalance");
+    // document.getElementsByClassName("modal")[0].style.visibility = "visible";
+    document.getElementById("map").style.visibility = "hidden";
+    document.getElementsByClassName("chart-wrapper")[0].style.transform =
+        "translateY(200%)";
+    let bars = document.getElementsByClassName("bar");
+    for (let bar of bars) {
+        bar.innerHTML = "";
+        bar.style.transition = "width 1s";
+        bar.style.width = "0%";
+    }
 }
 
 async function requestRoute(modus, start, end) {
@@ -423,23 +447,18 @@ function animate(id, route) {
             ? stepEmission.toFixed(2) + " g CO2"
             : (stepEmission / 1000).toFixed(2) + " kg CO2";
 
-    // if (counters[id] === 500) {
-    //     console.log(data[id]["duration"]);
-    //     console.log(steps[id]);
-    //     console.log(counters[id]);
-    //     console.log(stepDuration);
-    //     console.log(stepDuration < 60);
-    // }
-
     // Request the next frame of animation so long the end has not been reached.
     if (counters[id] < steps[id]) {
         requestAnimationFrame(function () {
             animate(id, route);
         });
+    } else {
+        console.log("End of animation");
+        document.getElementById("info").style.visibility = "visible";
+        document.getElementById("info-trip").style.display = "block";
     }
 
     counters[id] += 1;
-    // barCounter[id] += 0.1;
 }
 
 function secondsToHms(d) {
@@ -464,8 +483,8 @@ function secondsToHms(d) {
 
 let chosenModus;
 let otherModus;
-function chooseModus(e) {
-    chosenModus = e.id;
+function chooseModus(chosenModus) {
+    modusScreen = false;
     otherModus = chosenModus === "driving" ? "cycling" : "driving";
 
     let chosenIcon = document.getElementById("icon-chosen");
@@ -482,7 +501,8 @@ function chooseModus(e) {
     colors[chosenModus] = "#ff6d00";
 
     // Hide modus choice
-    document.getElementById("info").innerHTML = "Wählt ein Ausgangspunkt aus";
+    document.getElementById("info-modus").style.display = "none";
+    document.getElementById("info-start").style.display = "block";
     document.getElementById("modus").style.display = "none";
 
     // A single point that animates along the route.
@@ -555,13 +575,19 @@ function chooseModus(e) {
             map.getSource(chosenModus).setData(points[chosenModus]);
         }
     });
+
+    mapInteractive = true;
+    toggleMap();
 }
 
 // On 'Enter' center map on choice
 document.onkeydown = async function (e) {
-    if (e.keyCode === 13 && chosenModus) {
+    console.log(e.key);
+    if (e.key === "Enter" && mapInteractive) {
         // if enter pressed
         markerFixed = false;
+        mapInteractive = false;
+        toggleMap();
 
         let center = map.getCenter();
 
@@ -581,6 +607,7 @@ document.onkeydown = async function (e) {
         calculatePercentages();
 
         document.getElementById("info").style.visibility = "hidden";
+        document.getElementById("info-start").style.display = "none";
         document.getElementsByClassName("chart-wrapper")[0].style.visibility =
             "visible";
 
@@ -589,5 +616,63 @@ document.onkeydown = async function (e) {
 
         animate("driving", animatedRoutes["driving"]);
         animate("cycling", animatedRoutes["cycling"]);
+    } else if (e.key === "ArrowUp" && mapInteractive) {
+        map.panBy([0, -panDistance]);
+    } else if (e.key === "ArrowDown" && mapInteractive) {
+        map.panBy([0, panDistance]);
+    } else if (e.key === "ArrowLeft" && mapInteractive) {
+        map.panBy([-panDistance, 0]);
+    } else if (e.key === "ArrowRight" && mapInteractive) {
+        map.panBy([panDistance, 0]);
+    } else if (e.key === "ArrowRight" && languageScreen) {
+        document.getElementById("de").classList.add("selected");
+        document.getElementById("en").classList.remove("selected");
+    } else if (e.key === "ArrowLeft" && languageScreen) {
+        document.getElementById("de").classList.remove("selected");
+        document.getElementById("en").classList.add("selected");
+    } else if (e.key === "Enter" && languageScreen) {
+        for (btn of ["en", "de"]) {
+            if (document.getElementById(btn).classList.contains("selected")) {
+                chooseLanguage(document.getElementById(btn));
+            }
+        }
+    } else if (e.key === "Enter" && startScreen) {
+        startGame();
+    } else if (e.key === "ArrowRight" && modusScreen) {
+        document.getElementById("driving").classList.add("selected");
+        document.getElementById("cycling").classList.remove("selected");
+    } else if (e.key === "ArrowLeft" && modusScreen) {
+        document.getElementById("driving").classList.remove("selected");
+        document.getElementById("cycling").classList.add("selected");
+    } else if (e.key === "Enter" && modusScreen) {
+        console.log("modusScreen");
+        for (btn of ["cycling", "driving"]) {
+            console.log(btn);
+            if (document.getElementById(btn).classList.contains("selected")) {
+                chooseModus(btn);
+            }
+        }
     }
 };
+
+let panDistance = 100;
+
+function toggleMap() {
+    if (mapInteractive) {
+        map.boxZoom.enable();
+        map.scrollZoom.enable();
+        map.dragPan.enable();
+        map.dragRotate.enable();
+        map.keyboard.enable();
+        map.doubleClickZoom.enable();
+        map.touchZoomRotate.enable();
+    } else {
+        map.boxZoom.disable();
+        map.scrollZoom.disable();
+        map.dragPan.disable();
+        map.dragRotate.disable();
+        map.keyboard.disable();
+        map.doubleClickZoom.disable();
+        map.touchZoomRotate.disable();
+    }
+}

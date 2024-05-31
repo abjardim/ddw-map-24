@@ -13,6 +13,7 @@ body {
     font-weight: 400;
     font-style: normal;
     overflow: hidden;
+    background-color: var(--main-secondary-color);
 }
 
 #map {
@@ -21,6 +22,8 @@ body {
     bottom: 0;
     width: 100%;
     user-select: none;
+    visibility: visible;
+    transition: visibility 0.5s ease-out;
 }
 
 .mapboxgl-control-container {
@@ -28,24 +31,24 @@ body {
 }
 
 #info {
-    display: table;
+    display: flex;
     position: absolute;
-    margin: auto;
-    word-wrap: anywhere;
-    white-space: pre-wrap;
     padding: 10px;
-    border: none;
-    border-radius: 3px;
     font-size: 30px;
     text-align: center;
     color: white;
-    /* background: var(--main-bg-color); */
-    bottom: 3rem;
-    /* font-weight: bold; */
-    /* font-style: italic; */
-    padding: 0px;
+    bottom: 30px;
     width: 100%;
     visibility: hidden;
+}
+
+#info-trip .rect-btn {
+    margin-top: 25px;
+}
+
+.info-text {
+    display: none;
+    width: 100%;
 }
 
 .rect-btn {
@@ -59,9 +62,11 @@ body {
 }
 
 .rect-btn:hover,
-.rect-btn:focus {
-    background-color: var(--main-secondary-color);
-    color: #ffffff;
+.rect-btn:focus,
+.rect-btn.selected,
+.round-btn.selected {
+    background-color: var(--main-color);
+    /* color: #ffffff; */
 }
 
 .btn {
@@ -95,7 +100,7 @@ body {
     justify-content: center;
     align-items: center;
     vertical-align: middle;
-    background-color: var(--main-bg-color);
+    background-color: #ffffff;
     color: var(--main-secondary-color);
     text-align: center;
 }
@@ -133,7 +138,7 @@ body {
 .chart-wrapper {
     position: absolute;
     width: 100%;
-    height: 30%;
+    /* height: 30%; */
     display: grid;
     grid-template-columns: 8% 37% 10% 37% 8%;
     grid-row: 1;
@@ -141,6 +146,8 @@ body {
     pointer-events: none;
     z-index: 999;
     visibility: hidden;
+    transition: transform 2s;
+    /* background-color: var(--main-secondary-color); */
 }
 
 .chart-container,
@@ -253,10 +260,10 @@ body {
     /* height: 60%; */
     /* padding: 16px; */
     /* border: 5px solid var(--main-color); */
-    background-color: var(--main-color);
+    background-color: var(--main-secondary-color);
     z-index: 1002;
     overflow: auto;
-    color: var(--main-secondary-color);
+    color: #ffffff;
 }
 
 .modal-inner > * {

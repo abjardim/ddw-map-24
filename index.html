@@ -31,8 +31,12 @@
         <!-- Modal -->
         <div class="modal">
             <div id="modal-language" class="modal-inner">
-                <div>Choose a language/Wählt eine Sprache</div>
-                <button id="en" class="rect-btn" onclick="chooseLanguage(this)">
+                <div>Choose a language / Wählt eine Sprache</div>
+                <button
+                    id="en"
+                    class="rect-btn selected"
+                    onclick="chooseLanguage(this)"
+                >
                     English
                 </button>
                 <button id="de" class="rect-btn" onclick="chooseLanguage(this)">
@@ -96,22 +100,46 @@
                     zu bewegen und drücken Sie die Taste, um Ihre Auswahl zu
                     bestätigen.
                 </p>
-                <button class="rect-btn" onclick="startGame()">Start</button>
+                <button class="rect-btn selected" onclick="startGame()">
+                    Start
+                </button>
             </div>
         </div>
         <!-- Map Container -->
         <div id="map" tabindex="-1"></div>
         <!-- Title -->
         <div id="info">
-            <div class="de">Wählt einen Mobilitätsmodus aus</div>
-            <div class="en">Choose a transportation mode</div>
+            <div id="info-modus" class="info-text">
+                <div class="de">Wählt einen Mobilitätsmodus aus</div>
+                <div class="en">Choose a transportation mode</div>
+            </div>
+            <div id="info-start" class="info-text">
+                <div class="de">Wählt ein Ausgangspunkt aus</div>
+                <div class="en">Choose a starting point</div>
+            </div>
+            <div id="info-trip" class="info-text">
+                <div class="de">
+                    Dies ist die Bilanz einer Fahrt. Wie viel würde das in einem
+                    Jahr ausmachen?
+                </div>
+                <div class="en">
+                    This is the balance of one trip. How much would that add up
+                    to in a year?
+                </div>
+                <button class="rect-btn en" onclick="showYearBalance()">
+                    Continue
+                </button>
+                <button class="rect-btn de" onclick="showYearBalance()">
+                    Weiter
+                </button>
+            </div>
         </div>
         <!-- Modus Container -->
         <div id="modus" class="modus-container">
             <button
                 id="cycling"
-                onclick="chooseModus(this)"
-                class="round-btn text-center"
+                onclick="chooseModus(this.id)"
+                class="round-btn text-center selected"
                 tabindex="0"
             >
                 <svg class="fill-btn-cycling">
