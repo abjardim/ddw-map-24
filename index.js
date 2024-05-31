@@ -21,6 +21,7 @@ let mapInteractive = false;
 let languageScreen = true;
 let startScreen = false;
 let modusScreen = false;
+let tripScreen = false;
 
 // Restrict map panning to a radius
 var radiusInKm = 10;
@@ -456,6 +457,7 @@ function animate(id, route) {
         console.log("End of animation");
         document.getElementById("info").style.visibility = "visible";
         document.getElementById("info-trip").style.display = "block";
+        tripScreen = true;
     }
 
     counters[id] += 1;
@@ -483,7 +485,8 @@ function secondsToHms(d) {
 
 let chosenModus;
 let otherModus;
-function chooseModus(chosenModus) {
+function chooseModus(modus) {
+    chosenModus = modus;
     modusScreen = false;
     otherModus = chosenModus === "driving" ? "cycling" : "driving";
 
@@ -606,6 +609,10 @@ document.onkeydown = async function (e) {
 
         calculatePercentages();
 
+        console.log(steps);
+        console.log(barCounter);
+        console.log(barPercentage);
+
         document.getElementById("info").style.visibility = "hidden";
         document.getElementById("info-start").style.display = "none";
         document.getElementsByClassName("chart-wrapper")[0].style.visibility =
@@ -652,6 +659,8 @@ document.onkeydown = async function (e) {
                 chooseModus(btn);
             }
         }
+    } else if (e.key === "Enter" && tripScreen) {
+        showYearBalance();
     }
 };
 

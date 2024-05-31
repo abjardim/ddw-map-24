@@ -126,10 +126,16 @@
                     This is the balance of one trip. How much would that add up
                     to in a year?
                 </div>
-                <button class="rect-btn en" onclick="showYearBalance()">
+                <button
+                    class="rect-btn en selected"
+                    onclick="showYearBalance()"
+                >
                     Continue
                 </button>
-                <button class="rect-btn de" onclick="showYearBalance()">
+                <button
+                    class="rect-btn de selected"
+                    onclick="showYearBalance()"
+                >
                     Weiter
                 </button>
             </div>
@@ -153,7 +159,7 @@
 
             <button
                 id="driving"
-                onclick="chooseModus(this)"
+                onclick="chooseModus(this.id)"
                 class="round-btn text-center"
                 tabindex="1"
             >
