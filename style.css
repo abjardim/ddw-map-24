@@ -40,6 +40,30 @@ body {
     bottom: 30px;
     width: 100%;
     visibility: hidden;
+    transition: transform 2s;
+}
+
+/* #info-final {
+    bottom: 60px;
+    visibility: visible;
+} */
+
+.de {
+    display: none;
+}
+
+#info-final {
+    display: none;
+    position: absolute;
+    font-size: 30px;
+    text-align: center;
+    color: white;
+    bottom: 30px;
+    width: 100%;
+}
+
+#info-year {
+    display: none;
 }
 
 #info-trip .rect-btn {
@@ -51,6 +75,10 @@ body {
     width: 100%;
 }
 
+#info-final .rect-btn {
+    margin-top: 25px;
+}
+
 .rect-btn {
     background-color: #ffffff;
     color: var(--main-secondary-color);
@@ -59,6 +87,7 @@ body {
     font-style: normal;
     border: 2px solid var(--main-secondary-color);
     padding: 10px 20px;
+    min-width: 100px;
 }
 
 .rect-btn:hover,
@@ -242,12 +271,8 @@ body {
     width: 100%;
 }
 
-#slider {
-    top: 0;
-    float: right;
-}
-
-.modal {
+.modal,
+#modal-balance {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -276,6 +301,93 @@ body {
     vertical-align: middle;
 }
 
-#modal-start {
+#modal-start,
+#modal-end {
     display: none;
+}
+
+#modal-balance {
+    font-size: 50px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--main-color);
+    color: var(--main-secondary-color);
+    visibility: hidden;
+}
+
+#costBalance,
+#emissionBalance {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50%; /* Each inner div occupies 50% of the parent height */
+    text-align: center;
+    padding: 40px;
+}
+
+/********** Range Input Styles **********/
+/*Range Reset*/
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    width: 15rem;
+    margin-top: 50px;
+}
+
+/* Removes default focus */
+input[type="range"]:focus {
+    outline: none;
+}
+
+/***** Chrome, Safari, Opera and Edge Chromium styles *****/
+/* slider track */
+input[type="range"]::-webkit-slider-runnable-track {
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    height: 0.5rem;
+}
+
+/* slider thumb */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    margin-top: -12px; /* Centers thumb on the track */
+
+    /*custom styles*/
+    background-color: var(--main-color);
+    height: 2rem;
+    width: 1rem;
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+    border: 1px solid var(--main-color);
+    outline: 3px solid var(--main-color);
+    outline-offset: 0.125rem;
+}
+
+/******** Firefox styles ********/
+/* slider track */
+input[type="range"]::-moz-range-track {
+    background-color: var(--main-color);
+    border-radius: 0.5rem;
+    height: 0.5rem;
+}
+
+/* slider thumb */
+input[type="range"]::-moz-range-thumb {
+    border: none; /*Removes extra border that FF applies*/
+    border-radius: 0; /*Removes default border-radius that FF applies*/
+
+    /*custom styles*/
+    background-color: #ffffff;
+    height: 2rem;
+    width: 1rem;
+}
+
+input[type="range"]:focus::-moz-range-thumb {
+    border: 1px solid var(--main-color);
+    outline: 3px solid var(--main-color);
+    outline-offset: 0.125rem;
 }

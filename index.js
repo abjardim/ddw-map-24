@@ -1,3 +1,48 @@
+// fetch(
+//     "https://stattdatenstadtdaten.ids-research.de/wp-json/ddw24/v2/get_data",
+//     {
+//         method: "POST",
+//         headers: {
+//             "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({
+//             data_value: "30",
+//         }),
+//     }
+// )
+//     .then((response) => response.json())
+//     .then((data) => console.log(data))
+//     .catch((error) => console.error("Error:", error));
+
+function animateNumber(element, currentNumber, targetNumber) {
+    const numberElement = document.getElementById(element);
+    const duration = 2000; // Animation duration in milliseconds
+    const startTime = performance.now();
+
+    function updateNumber(timestamp) {
+        const elapsedTime = timestamp - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        const newNumber = Math.floor(progress * targetNumber);
+        let text;
+        if (element === "costBalance") {
+            text = newNumber.toFixed(2) + " €";
+        } else {
+            text =
+                newNumber < 1000
+                    ? newNumber.toFixed(2) + " g CO2"
+                    : (newNumber / 1000).toFixed(2) + " kg CO2";
+        }
+
+        numberElement.textContent = text;
+
+        if (progress < 1) {
+            requestAnimationFrame(updateNumber);
+        }
+    }
+
+    requestAnimationFrame(updateNumber);
+}
+
 // Mapbox Access Token
 mapboxgl.accessToken =
     "pk.eyJ1IjoiYWJqYXJkaW0iLCJhIjoiY2tmZmpyM3d3MGZkdzJ1cXZ3a3kza3BybiJ9.2CgI2GbcJysBRHmh7WwdVA";
@@ -22,6 +67,7 @@ let languageScreen = true;
 let startScreen = false;
 let modusScreen = false;
 let tripScreen = false;
+let yearScreen = false;
 
 // Restrict map panning to a radius
 var radiusInKm = 10;
@@ -192,6 +238,41 @@ let emission = {
     cycling: 0.0,
 };
 
+let balance = {
+    cost: 0.0,
+    emission: 0.0,
+};
+
+let selectedBalance = {
+    cost: 0.0,
+    emission: 0.0,
+};
+
+let selectedDays = 1;
+
+function calculateBalance(days) {
+    selectedDays = days;
+    document.getElementById("info-year-de").innerText =
+        "Diese Fahrt mit dem Fahrrad " +
+        days +
+        "-Mal pro Woche für ein Jahr würde so viel sparen";
+    document.getElementById("info-year-en").innerText =
+        "This trip by bike " +
+        days +
+        " X a week for a year would save this much";
+
+    balance = {
+        cost: (cost["driving"] - cost["cycling"]) * days * 52,
+        emission: (emission["driving"] - emission["cycling"]) * days * 52,
+    };
+    animateNumber("costBalance", selectedBalance["cost"], balance["cost"]);
+    animateNumber(
+        "emissionBalance",
+        selectedBalance["emission"],
+        balance["emission"]
+    );
+}
+
 function chooseLanguage(btn) {
     console.log(btn.id);
     let toHide = btn.id === "de" ? "en" : "de";
@@ -216,17 +297,36 @@ function startGame() {
 }
 
 function showYearBalance() {
-    console.log("showYearBalance");
+    document.getElementById("info-trip").style.display = "none";
+    // document.getElementById("map").style.visibility = "hidden";
+    document.getElementById("info-year").style.display = "block";
+    document.getElementById("info").style.transform = "translateY(-470%)";
+    document.getElementsByClassName("chart-wrapper")[0].style.visibility =
+        "hidden";
     // document.getElementsByClassName("modal")[0].style.visibility = "visible";
-    document.getElementById("map").style.visibility = "hidden";
-    document.getElementsByClassName("chart-wrapper")[0].style.transform =
-        "translateY(200%)";
-    let bars = document.getElementsByClassName("bar");
-    for (let bar of bars) {
-        bar.innerHTML = "";
-        bar.style.transition = "width 1s";
-        bar.style.width = "0%";
-    }
+    document.getElementById("modal-balance").style.visibility = "visible";
+    document.getElementById("info-final").style.display = "block";
+    calculateBalance(1);
+    // document.getElementsByClassName("chart-wrapper")[0].style.transform =
+    //     "translateY(200%)";
+    // let bars = document.getElementsByClassName("bar");
+    // for (let bar of bars) {
+    //     bar.innerHTML = "";
+    //     bar.style.transition = "width 1s";
+    //     bar.style.width = "0%";
+    // }
+}
+
+function openEndScreen() {
+    document.getElementById("info-year").style.display = "none";
+    document.getElementById("info-final").style.display = "none";
+    document.getElementsByClassName("modal")[0].style.visibility = "visible";
+    document.getElementById("modal-balance").style.display = "none";
+    document.getElementById("modal-end").style.display = "block";
+}
+
+function print() {
+    location.reload();
 }
 
 async function requestRoute(modus, start, end) {
@@ -454,7 +554,6 @@ function animate(id, route) {
             animate(id, route);
         });
     } else {
-        console.log("End of animation");
         document.getElementById("info").style.visibility = "visible";
         document.getElementById("info-trip").style.display = "block";
         tripScreen = true;

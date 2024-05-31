@@ -104,6 +104,29 @@
                     Start
                 </button>
             </div>
+            <div id="modal-end" class="modal-inner">
+                <p class="en">
+                    Thank you for participating in our experiment. We hope you
+                    enjoyed it and learned something new. If you have any
+                    questions or feedback, please let us know.
+                </p>
+                <p class="de">
+                    Vielen Dank, dass Sie an unserem Experiment teilgenommen
+                    haben. Wir hoffen, es hat Ihnen gefallen und Sie haben etwas
+                    Neues gelernt. Wenn Sie Fragen oder Feedback haben, lassen
+                    Sie es uns bitte wissen.
+                </p>
+                <button class="rect-btn selected en" onclick="print()">
+                    Print Results
+                </button>
+                <button class="rect-btn selected de" onclick="print()">
+                    Ergebnisse drucken
+                </button>
+            </div>
+        </div>
+        <div id="modal-balance">
+            <div id="costBalance" class="number">0€</div>
+            <div id="emissionBalance" class="number">0kg CO²</div>
         </div>
         <!-- Map Container -->
         <div id="map" tabindex="-1"></div>
@@ -139,6 +162,44 @@
                     Weiter
                 </button>
             </div>
+            <div id="info-year" class="info-text">
+                <div id="info-year-de" class="de">
+                    Diese Fahrt mit dem Fahrrad 1 Mal pro Woche für ein Jahr
+                    würde so viel sparen
+                </div>
+                <div id="info-year-en" class="en">
+                    This trip with the bike 1 time a week for a year would save
+                </div>
+
+                <input
+                    type="range"
+                    min="1"
+                    max="7"
+                    value="0"
+                    class="slider"
+                    id="slider"
+                    onchange="calculateBalance(this.value)"
+                />
+            </div>
+        </div>
+        <div id="info-final">
+            <div class="de">
+                Würden Sie nach diesen Informationen öfter Rad fahren?
+            </div>
+            <div class="en">
+                Would you consider cycling more after learning this information?
+            </div>
+
+            <button class="rect-btn de selected" onclick="openEndScreen()">
+                Ja
+            </button>
+            <button class="rect-btn de selected" onclick="openEndScreen()">
+                Nein
+            </button>
+            <button class="rect-btn en selected" onclick="openEndScreen()">
+                Yes
+            </button>
+            <button class="rect-btn en" onclick="openEndScreen()">No</button>
         </div>
         <!-- Modus Container -->
         <div id="modus" class="modus-container">
