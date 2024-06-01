@@ -1,19 +1,3 @@
-// fetch(
-//     "https://stattdatenstadtdaten.ids-research.de/wp-json/ddw24/v2/get_data",
-//     {
-//         method: "POST",
-//         headers: {
-//             "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//             data_value: "30",
-//         }),
-//     }
-// )
-//     .then((response) => response.json())
-//     .then((data) => console.log(data))
-//     .catch((error) => console.error("Error:", error));
-
 function animateNumber(element, currentNumber, targetNumber) {
     const numberElement = document.getElementById(element);
     const duration = 2000; // Animation duration in milliseconds
@@ -67,7 +51,9 @@ let languageScreen = true;
 let startScreen = false;
 let modusScreen = false;
 let tripScreen = false;
-let yearScreen = false;
+let yearScreenTop = false;
+let yearScreenBottom = false;
+let printScreen = false;
 
 // Restrict map panning to a radius
 var radiusInKm = 10;
@@ -86,6 +72,7 @@ map.on("load", function () {
     toggleMap();
 });
 
+let final_answer;
 let start;
 
 let animationRange = [50, 100];
@@ -307,6 +294,8 @@ function showYearBalance() {
     document.getElementById("modal-balance").style.visibility = "visible";
     document.getElementById("info-final").style.display = "block";
     calculateBalance(1);
+    tripScreen = false;
+    yearScreenTop = true;
     // document.getElementsByClassName("chart-wrapper")[0].style.transform =
     //     "translateY(200%)";
     // let bars = document.getElementsByClassName("bar");
@@ -326,7 +315,39 @@ function openEndScreen() {
 }
 
 function print() {
-    location.reload();
+    let sendData = {
+        coords: start,
+        address: "",
+        modus_choice: chosenModus,
+        cycling_distance: data["cycling"].distance,
+        cycling_duration: data["cycling"].duration,
+        cycling_cost: cost["cycling"],
+        cycling_emission: emission["cycling"],
+        driving_distance: data["driving"].distance,
+        driving_duration: data["driving"].duration,
+        driving_cost: cost["driving"],
+        driving_emission: emission["driving"],
+        times_per_week: selectedDays,
+        diff_cost: balance["cost"],
+        diff_emission: balance["emission"],
+        question: final_answer,
+    };
+    fetch(
+        "https://stattdatenstadtdaten.ids-research.de/wp-json/ddw24/v2/get_data",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(sendData),
+        }
+    )
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(data);
+            // window.location.reload(); // Reload the page
+        })
+        .catch((error) => console.error("Error:", error));
 }
 
 async function requestRoute(modus, start, end) {
@@ -760,6 +781,53 @@ document.onkeydown = async function (e) {
         }
     } else if (e.key === "Enter" && tripScreen) {
         showYearBalance();
+    } else if (
+        (e.key === "ArrowRight" && yearScreenTop) ||
+        (e.key === "ArrowLeft" && yearScreenTop)
+    ) {
+        let slider = document.getElementById("slider");
+        let sliderValue = parseInt(slider.value);
+        slider.value =
+            e.key === "ArrowRight" ? sliderValue + 1 : sliderValue - 1;
+        calculateBalance(slider.value);
+    } else if (e.key === "ArrowDown" && yearScreenTop) {
+        yearScreenTop = false;
+        yearScreenBottom = true;
+        for (btn of ["ja", "yes"]) {
+            document.getElementById(btn).classList.add("selected");
+        }
+    } else if (e.key === "ArrowRight" && yearScreenBottom) {
+        document.getElementById("no").classList.add("selected");
+        document.getElementById("nein").classList.add("selected");
+        document.getElementById("yes").classList.remove("selected");
+        document.getElementById("ja").classList.remove("selected");
+    } else if (e.key === "ArrowLeft" && yearScreenBottom) {
+        document.getElementById("no").classList.remove("selected");
+        document.getElementById("nein").classList.remove("selected");
+        document.getElementById("ja").classList.add("selected");
+        document.getElementById("yes").classList.add("selected");
+    } else if (e.key === "ArrowUp" && yearScreenBottom) {
+        yearScreenBottom = false;
+        yearScreenTop = true;
+        for (btn of ["ja", "yes", "nein", "no"]) {
+            document.getElementById(btn).classList.remove("selected");
+        }
+    } else if (e.key === "Enter" && yearScreenBottom) {
+        for (btn of ["ja", "yes", "nein", "no"]) {
+            let element = document.getElementById(btn);
+            if (element.classList.contains("selected")) {
+                final_answer = btn === "ja" || btn === "yes" ? "yes" : "no";
+            }
+        }
+        yearScreenBottom = false;
+        document.getElementById("info-year").style.display = "none";
+        document.getElementById("info").style.visibility = "hidden";
+        document.getElementById("modal-balance").style.visibility = "hidden";
+        document.getElementById("info-final").style.display = "none";
+        openEndScreen();
+        printScreen = true;
+    } else if (e.key === "Enter" && printScreen) {
+        print();
     }
 };
 
